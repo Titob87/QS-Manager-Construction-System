@@ -417,7 +417,7 @@ button{font-family:var(--fbody)}
    ============================================================ */
 
 // ── CONFIG ───────────────────────────────────────────────────
-const API_URL = 'YOUR_GAS_WEBAPP_URL';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyUPFNw_6j1wvJcgJDh9TIZgzR9tdKT5wACIAI6hxhuaNi_YN4X0_3Z6kCFl4J-Mf-e-w/exec';
 
 // ── RBAC ─────────────────────────────────────────────────────
 const ROLE_PERMS = {
@@ -723,7 +723,7 @@ function demoVendors(){return[
 ];}
 
 // ── API / DEMO ─────────────────────────────────────────────────
-const isDemo=()=>API_URL==='YOUR_GAS_WEBAPP_URL';
+const isDemo=()=>API_URL==='https://script.google.com/macros/s/AKfycbyUPFNw_6j1wvJcgJDh9TIZgzR9tdKT5wACIAI6hxhuaNi_YN4X0_3Z6kCFl4J-Mf-e-w/exec';
 
 async function loadAll(){
   if(isDemo()){ materials=demoMaterials(); upahList=demoUpah(); alatList=demoAlat(); vendorDB=demoVendors(); }
