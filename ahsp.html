@@ -360,7 +360,7 @@ button{font-family:var(--fbody)}
    ============================================================ */
 
 // ── CONFIG ───────────────────────────────────────────────────
-const API_URL = 'YOUR_GAS_WEBAPP_URL';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyUPFNw_6j1wvJcgJDh9TIZgzR9tdKT5wACIAI6hxhuaNi_YN4X0_3Z6kCFl4J-Mf-e-w/exec';
 
 // ── RBAC ─────────────────────────────────────────────────────
 const ROLE_PERMS = {
@@ -570,7 +570,7 @@ function skeletonRows(cols, count = 5) {
 let materials=[], upahList=[], alatList=[], ahspList=[], ahspFiltered=[];
 let ahspItems=[], itemIdx=0;
 let selectedAHSP=new Set();
-const isDemo=()=>API_URL==='YOUR_GAS_WEBAPP_URL';
+const isDemo=()=>API_URL==='https://script.google.com/macros/s/AKfycbyUPFNw_6j1wvJcgJDh9TIZgzR9tdKT5wACIAI6hxhuaNi_YN4X0_3Z6kCFl4J-Mf-e-w/exec';
 
 // ── DEMO DATA ──────────────────────────────────────────────────
 function demoMaterials(){return[
