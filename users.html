@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>QS Manager — User Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ============================================================
+   QS Manager — Shared CSS Design System v3.0
+   ============================================================ */
+:root{
+  --bg:#090C12;--surface:#0E1118;--card:#141B26;--card2:#1A2133;--card3:#1F2840;
+  --primary:#F97316;--primary-d:rgba(249,115,22,.1);--primary-b:rgba(249,115,22,.22);
+  --cyan:#22D3EE;--success:#22C55E;--warning:#EAB308;--danger:#EF4444;--purple:#A78BFA;
+  --text:#DDE4EF;--muted:#526070;--dim:#8899AA;--border:#1C2535;--border2:#243049;
+  --sidebar-w:240px;
+  --fdisp:'Barlow Condensed',sans-serif;--fbody:'DM Sans',sans-serif;--fmono:'JetBrains Mono',monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:13px;--r-xl:16px
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--fbody);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13.5px}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--fbody)}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s}
+.sb-top{padding:16px 14px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-ico{width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;box-shadow:0 4px 14px rgba(249,115,22,.35);flex-shrink:0}
+.logo-nm{font-family:var(--fdisp);font-size:15px;font-weight:800;letter-spacing:1.5px}
+.logo-sub{font-size:8.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.nav-section{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:13px 10px 5px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-md);color:var(--dim);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none;margin-bottom:1px;border-left:2px solid transparent}
+.nav-item:hover{background:var(--primary-d);color:var(--text);border-left-color:rgba(249,115,22,.3)}
+.nav-item.active{background:var(--primary-d);color:var(--primary);border-left-color:var(--primary)}
+.nav-item i{width:14px;text-align:center;font-size:12px;flex-shrink:0}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:var(--r-md)}
+.user-av{width:30px;height:30px;background:var(--primary-d);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:12px;flex-shrink:0}
+.user-nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.btn-logout{margin-left:auto;color:var(--muted);cursor:pointer;font-size:12px;background:none;border:none;padding:4px;transition:color .2s}
+.btn-logout:hover{color:var(--danger)}
+
+/* ── MAIN ─────────────────────────────────────────────────── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:90}
+.menu-btn{display:none;background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:6px}
+.page-title{font-family:var(--fdisp);font-size:17px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.page-title i{color:var(--primary);font-size:15px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.content{padding:22px;flex:1}
+
+/* ── OVERLAY ─────────────────────────────────────────────── */
+.overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:98;opacity:0;pointer-events:none;transition:opacity .28s}
+.overlay.open{opacity:1;pointer-events:auto}
+
+/* ── SECTION TITLE ────────────────────────────────────────── */
+.section-title{font-family:var(--fdisp);font-size:17px;font-weight:700;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:9px;color:var(--text)}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title i{color:var(--primary);font-size:14px}
+
+/* ── STAT CARDS ───────────────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;cursor:default}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.c-orange::before{background:var(--primary)}.c-cyan::before{background:var(--cyan)}
+.c-green::before{background:var(--success)}.c-purple::before{background:var(--purple)}
+.c-yellow::before{background:var(--warning)}.c-red::before{background:var(--danger)}
+.stat-label{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:700}
+.stat-val{font-family:var(--fmono);font-size:26px;font-weight:500;line-height:1;margin-bottom:3px}
+.stat-sub{font-size:10.5px;color:var(--muted)}
+.stat-ico{position:absolute;top:14px;right:14px;font-size:24px;opacity:.06}
+
+/* ── TABS ─────────────────────────────────────────────────── */
+.tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:3px;width:fit-content;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:7px 18px;border-radius:var(--r-md);font-size:11.5px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:all .18s;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(249,115,22,.28)}
+.panel{display:none}.panel.active{display:block}
+.panel-grid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+
+/* ── FORM CARDS ───────────────────────────────────────────── */
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.fc-title{font-family:var(--fdisp);font-size:15px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:7px}
+.fc-title i{color:var(--primary);font-size:13px}
+.fgroup{margin-bottom:13px}
+.flabel{display:block;font-size:9.5px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.flabel .req{color:var(--danger)}
+.finput,.fsel,.ftarea{width:100%;padding:9px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text);font-family:var(--fbody);font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s}
+.finput:focus,.fsel:focus,.ftarea:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-d)}
+.finput::placeholder,.ftarea::placeholder{color:var(--muted)}
+.fsel{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M8 10L3 5h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:11px;padding-right:30px}
+.fsel option{background:var(--card2)}
+.ftarea{resize:vertical;min-height:70px}
+.frow-2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.frow-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 16px;border-radius:var(--r-md);font-family:var(--fbody);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;border:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#ea6d10;box-shadow:0 4px 14px rgba(249,115,22,.3)}
+.btn-secondary{background:var(--card2);color:var(--dim);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.btn-danger{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.18)}.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-success{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.18)}.btn-success:hover{background:var(--success);color:#fff}
+.btn-cyan{background:rgba(34,211,238,.1);color:var(--cyan);border:1px solid rgba(34,211,238,.18)}.btn-cyan:hover{background:var(--cyan);color:#000}
+.btn-sm{padding:5px 11px;font-size:11px}
+.btn-full{width:100%;padding:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* ── DATA TABLE CARD ──────────────────────────────────────── */
+.data-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.data-toolbar{padding:12px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.search-box{position:relative;flex:1;min-width:180px}
+.search-box i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px}
+.search-box input{width:100%;padding:7px 10px 7px 30px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text);font-size:12.5px;outline:none;transition:border-color .18s}
+.search-box input:focus{border-color:var(--primary)}
+.search-box input::placeholder{color:var(--muted)}
+.filter-sel{padding:7px 26px 7px 10px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--dim);font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M8 10L3 5h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px}
+.filter-sel option{background:var(--card2)}
+.count-tag{font-family:var(--fmono);font-size:10.5px;color:var(--muted);background:var(--card2);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.tbl-wrap{overflow-x:auto;max-height:520px;overflow-y:auto}
+.tbl{width:100%;border-collapse:collapse;min-width:500px}
+.tbl thead{position:sticky;top:0;z-index:2}
+.tbl th{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:9px 14px;text-align:left;background:var(--card2);font-weight:700;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border)}
+.tbl th:hover{color:var(--text)}
+.tbl th .sort-ico{margin-left:4px;opacity:.35}
+.tbl td{padding:9.5px 14px;font-size:12px;border-top:1px solid var(--border);color:var(--dim);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,.015);color:var(--text)}
+.act-btns{display:flex;gap:5px;justify-content:flex-end}
+.act-btn{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .18s}
+.act-edit{background:rgba(34,211,238,.08);color:var(--cyan)}.act-edit:hover{background:var(--cyan);color:#000}
+.act-del{background:rgba(239,68,68,.08);color:var(--danger)}.act-del:hover{background:var(--danger);color:#fff}
+.act-view{background:rgba(249,115,22,.08);color:var(--primary)}.act-view:hover{background:var(--primary);color:#fff}
+
+/* ── PAGINATION ───────────────────────────────────────────── */
+.pagination{padding:10px 16px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--border)}
+.pg-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--muted);font-size:11.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.pg-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.pg-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.pg-btn:disabled{opacity:.28;cursor:not-allowed}
+.pg-info{font-size:10.5px;color:var(--muted);margin-left:auto;font-family:var(--fmono)}
+
+/* ── BADGES ───────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.badge-orange{background:rgba(249,115,22,.12);color:var(--primary)}
+.badge-cyan{background:rgba(34,211,238,.12);color:var(--cyan)}
+.badge-green{background:rgba(34,197,94,.12);color:var(--success)}
+.badge-red{background:rgba(239,68,68,.12);color:var(--danger)}
+.badge-purple{background:rgba(167,139,250,.12);color:var(--purple)}
+.badge-yellow{background:rgba(234,179,8,.12);color:var(--warning)}
+.badge-gray{background:rgba(100,116,139,.12);color:var(--muted)}
+
+/* ── UTILITIES ────────────────────────────────────────────── */
+.mono{font-family:var(--fmono);font-size:11px}
+.currency{font-family:var(--fmono);font-size:11.5px;color:var(--success)}
+.text-muted{color:var(--muted)}
+.text-dim{color:var(--dim)}
+.text-primary{color:var(--primary)}
+.fw-bold{font-weight:600}
+.best-price-row td{background:rgba(34,197,94,.04)!important}
+
+/* ── LOADER / EMPTY ───────────────────────────────────────── */
+.loader{display:flex;align-items:center;justify-content:center;padding:44px;gap:11px;color:var(--muted)}
+.spin{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty-state i{font-size:32px;display:block;margin-bottom:10px;opacity:.2}
+.empty-state p{font-size:12.5px;margin-bottom:0}
+
+/* ── KEYFRAMES ────────────────────────────────────────────── */
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media(max-width:920px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.menu-btn{display:flex}
+  .panel-grid{grid-template-columns:1fr}
+  .form-card{position:static!important}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .chart-grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){.stats-grid{grid-template-columns:1fr}.content{padding:13px}.topbar{padding:0 13px}}
+.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.perm-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:13px}
+.perm-title{font-family:var(--fdisp);font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.perm-list{display:flex;flex-direction:column;gap:4px}
+.perm-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--dim)}
+.perm-item i{font-size:10px;width:12px;text-align:center}
+.perm-item.has{color:var(--success)}.perm-item.has i{color:var(--success)}
+.perm-item.no{color:var(--muted);text-decoration:line-through;opacity:.5}
+@media(max-width:700px){.perm-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="sidebarMount"></div>
+<main class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <div class="page-title"><i class="fas fa-users-gear"></i> User Management</div>
+  </div>
+  <div class="content">
+    <div class="section-title"><i class="fas fa-shield-halved"></i> Role & Permissions</div>
+    <div class="perm-grid" style="margin-bottom:24px">
+
+      <!-- ADMIN -->
+      <div class="perm-card">
+        <div class="perm-title"><span class="badge badge-red">ADMIN</span> Full Access</div>
+        <div class="perm-list">
+          <div class="perm-item has"><i class="fas fa-check"></i> Dashboard</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Material (CRUD)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Upah & Alat (CRUD)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Vendor (CRUD)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Analisa Harga</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> AHSP Builder</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> User Management</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Export CSV / Excel</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Export & Print PDF</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Hapus Semua Data</div>
+        </div>
+      </div>
+
+      <!-- QS -->
+      <div class="perm-card">
+        <div class="perm-title"><span class="badge badge-cyan">QS</span> Quantity Surveyor</div>
+        <div class="perm-list">
+          <div class="perm-item has"><i class="fas fa-check"></i> Dashboard</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Material (Add / Edit)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Upah & Alat (Add / Edit)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> AHSP Builder</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Export CSV / Excel</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Vendor Management</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Analisa Harga</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> User Management</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Hapus Data</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Print PDF</div>
+        </div>
+      </div>
+
+      <!-- PURCHASING -->
+      <div class="perm-card">
+        <div class="perm-title"><span class="badge badge-purple">PURCHASING</span> Purchasing</div>
+        <div class="perm-list">
+          <div class="perm-item has"><i class="fas fa-check"></i> Dashboard</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Material (Read Only)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Vendor (Add / Edit)</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Analisa Harga</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Export CSV</div>
+          <div class="perm-item has"><i class="fas fa-check"></i> Print PDF Analisa Harga</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Upah & Alat</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> AHSP Builder</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> User Management</div>
+          <div class="perm-item no"><i class="fas fa-times"></i> Hapus Data</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title"><i class="fas fa-users"></i> Daftar Pengguna</div>
+    <div class="panel-grid">
+      <!-- FORM -->
+      <div class="form-card" id="userFormCard" style="position:sticky;top:62px">
+        <div class="fc-title"><i class="fas fa-user-plus"></i> <span id="userFormTitle">Tambah User</span></div>
+
+        <!-- INFO BANNER -->
+        <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);border-radius:var(--r-md);padding:10px 13px;margin-bottom:14px;font-size:11.5px;color:var(--cyan);display:flex;align-items:flex-start;gap:9px">
+          <i class="fas fa-circle-info" style="margin-top:1px;flex-shrink:0"></i>
+          <span>User yang ditambahkan <strong>langsung bisa login</strong> setelah disimpan. Password disimpan secara lokal dan ke Spreadsheet (jika GAS terhubung).</span>
+        </div>
+
+        <input type="hidden" id="userEditId">
+        <div class="fgroup"><label class="flabel">Username <span class="req">*</span></label><input id="uUsername" class="finput" placeholder="username unik" autocomplete="off"></div>
+        <div class="fgroup"><label class="flabel">Full Name</label><input id="uFullName" class="finput" placeholder="Nama lengkap"></div>
+        <div class="fgroup">
+          <label class="flabel">Password <span id="passHint" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(kosongkan jika tidak diubah)</span></label>
+          <div style="position:relative">
+            <input id="uPassword" type="password" class="finput" placeholder="••••••••" autocomplete="new-password" style="padding-right:40px">
+            <button onclick="toggleUPass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px"><i id="uEye" class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="frow-2">
+          <div class="fgroup"><label class="flabel">Role <span class="req">*</span></label>
+            <select id="uRole" class="fsel">
+              <option value="qs">QS (Quantity Surveyor)</option>
+              <option value="purchasing">Purchasing</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="fgroup"><label class="flabel">Status</label>
+            <select id="uStatus" class="fsel"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" id="userSaveBtn" onclick="saveUser()"><i class="fas fa-save"></i> <span id="userSaveLbl">SIMPAN USER</span></button>
+        <button class="btn btn-secondary btn-full" id="userCancelBtn" onclick="cancelEditUser()" style="margin-top:7px;display:none"><i class="fas fa-times"></i> Batal Edit</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="data-card">
+        <div class="data-toolbar">
+          <div class="search-box"><i class="fas fa-search"></i><input id="userSearch" placeholder="Cari username, nama…" oninput="debouncedFilter()"></div>
+          <select class="filter-sel" id="userRoleFilter" onchange="filterUsers()">
+            <option value="">Semua Role</option>
+            <option value="admin">Admin</option><option value="qs">QS</option><option value="purchasing">Purchasing</option>
+          </select>
+          <span class="count-tag" id="userCount">0 user</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl"><thead><tr>
+            <th>ID</th><th>Username</th><th>Full Name</th><th>Role</th><th>Status</th><th>Created</th><th></th>
+          </tr></thead>
+          <tbody id="userBody"><tr><td colspan="7"><div class="loader"><div class="spin"></div> Memuat…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+/* ============================================================
+   QS Manager — Shared Module v3.0
+   Embed this <script> block in every page.
+   ============================================================ */
+
+// ── CONFIG ───────────────────────────────────────────────────
+const API_URL = 'YOUR_GAS_WEBAPP_URL';
+
+// ── RBAC ─────────────────────────────────────────────────────
+const ROLE_PERMS = {
+  admin:      ['dashboard','material','upah','alat','vendor','analisa','ahsp','users','delete','export','print'],
+  qs:         ['dashboard','material','upah','alat','ahsp','export'],
+  purchasing: ['dashboard','material','vendor','analisa','export','print']
+};
+
+const MENU_CONFIG = [
+  { id:'dashboard', label:'Dashboard',      icon:'fa-chart-pie',      href:'dashboard.html',        section:'main' },
+  { id:'material',  label:'Material',       icon:'fa-boxes-stacked',  href:'material.html',         section:'main' },
+  { id:'upah',      label:'Upah',           icon:'fa-people-carry-box',href:'material.html#upah',   section:'main' },
+  { id:'alat',      label:'Alat',           icon:'fa-wrench',         href:'material.html#alat',    section:'main' },
+  { id:'vendor',    label:'Vendor',         icon:'fa-store',          href:'vendor.html',           section:'main' },
+  { id:'analisa',   label:'Analisa Harga',  icon:'fa-chart-column',   href:'material.html#analisa', section:'main' },
+  { id:'ahsp',      label:'AHSP Builder',   icon:'fa-calculator',     href:'ahsp.html',             section:'main' },
+  { id:'users',     label:'User Management',icon:'fa-users-gear',     href:'users.html',            section:'admin'},
+];
+
+// ── SESSION ───────────────────────────────────────────────────
+const QSAuth = {
+  SESSION_KEY: 'qs_session',
+  SESSION_TTL: 8 * 60 * 60 * 1000, // 8 hours
+
+  save(user, token) {
+    const sess = { user, token, ts: Date.now() };
+    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(sess));
+  },
+  load() {
+    try {
+      const raw = sessionStorage.getItem(this.SESSION_KEY);
+      if (!raw) return null;
+      const sess = JSON.parse(raw);
+      if (Date.now() - sess.ts > this.SESSION_TTL) { this.clear(); return null; }
+      return sess;
+    } catch(e) { return null; }
+  },
+  clear() { sessionStorage.removeItem(this.SESSION_KEY); },
+  getUser() { return this.load()?.user || null; },
+  getRole() { return this.load()?.user?.role || null; },
+  can(perm) { return (ROLE_PERMS[this.getRole()] || []).includes(perm); },
+  requireAuth(redirectTo = 'index.html') {
+    const sess = this.load();
+    if (!sess) { location.href = redirectTo; return null; }
+    return sess.user;
+  },
+  requirePerm(perm, redirectTo = 'dashboard.html') {
+    const user = this.requireAuth();
+    if (!user) return null;
+    if (!this.can(perm)) { location.href = redirectTo; return null; }
+    return user;
+  }
+};
+
+// ── SIDEBAR BUILDER ────────────────────────────────────────────
+function buildSidebar(activeId) {
+  const role = QSAuth.getRole() || '';
+  const perms = ROLE_PERMS[role] || [];
+  const user  = QSAuth.getUser() || {};
+
+  const ROLE_BADGE = { admin:'badge-red', qs:'badge-cyan', purchasing:'badge-purple' };
+
+  const navItems = MENU_CONFIG.filter(m => perms.includes(m.id)).map(m => `
+    <a href="${m.href}" class="nav-item${m.id === activeId ? ' active' : ''}" id="nav-${m.id}">
+      <i class="fas ${m.icon}"></i> ${m.label}
+    </a>`).join('');
+
+  const adminSection = role === 'admin' ? `
+    <div class="nav-section">Admin</div>
+    <a href="users.html" class="nav-item${activeId === 'users' ? ' active' : ''}" id="nav-users">
+      <i class="fas fa-users-gear"></i> User Management
+    </a>` : '';
+
+  return `
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="logo">
+        <div class="logo-ico"><i class="fas fa-hard-hat"></i></div>
+        <div><div class="logo-nm">QS MANAGER</div><div class="logo-sub">Construction System</div></div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-section">Menu</div>
+      ${navItems}
+      ${adminSection}
+      <div class="nav-section">Akun</div>
+      <a href="#" class="nav-item" onclick="logout();return false;"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+    </nav>
+    <div class="sb-foot">
+      <div class="user-card">
+        <div class="user-av"><i class="fas fa-user"></i></div>
+        <div>
+          <div class="user-nm">${user.fullName || user.username || '—'}</div>
+          <span class="badge ${ROLE_BADGE[role]||'badge-cyan'}" style="font-size:9px;margin-top:2px">${role.toUpperCase()}</span>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>`;
+}
+
+function initSidebar(activeId) {
+  document.getElementById('sidebarMount').innerHTML = buildSidebar(activeId);
+}
+
+// ── SIDEBAR TOGGLE ─────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('overlay')?.classList.remove('open');
+}
+
+// ── AUTH ───────────────────────────────────────────────────────
+function logout() { QSAuth.clear(); location.href = 'index.html'; }
+
+// ── API HELPERS ────────────────────────────────────────────────
+const QSApi = {
+  async get(action, params = {}) {
+    const qs = new URLSearchParams({ action, ...params }).toString();
+    const r  = await fetch(`${API_URL}?${qs}`);
+    return r.json();
+  },
+  async post(payload) {
+    const r = await fetch(API_URL, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    return r.json();
+  }
+};
+
+// ── FORMAT UTILS ───────────────────────────────────────────────
+const Fmt = {
+  rupiah: n => 'Rp\u00A0' + Number(n||0).toLocaleString('id-ID'),
+  pct:    n => Number(n||0).toFixed(2).replace(/\.00$/,'') + '%',
+  num:    n => Number(n||0).toLocaleString('id-ID'),
+  dec:    (n, d=6) => parseFloat(n||0).toFixed(d).replace(/\.?0+$/,'')
+};
+
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg, type = 'success', duration = 3000) {
+  let wrap = document.getElementById('toastWrap');
+  if (!wrap) { wrap = document.createElement('div'); wrap.id = 'toastWrap'; wrap.style.cssText = 'position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:8px'; document.body.appendChild(wrap); }
+  const ICO = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle', warning:'fa-triangle-exclamation' };
+  const COL = { success:'var(--success)', error:'var(--danger)', info:'var(--cyan)', warning:'var(--warning)' };
+  const el = document.createElement('div');
+  el.style.cssText = `display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;min-width:240px;background:rgba(22,27,39,.97);border:1px solid ${COL[type]||COL.info};color:${COL[type]||COL.info};box-shadow:0 8px 32px rgba(0,0,0,.5);animation:tin .3s ease;transition:opacity .4s`;
+  el.innerHTML = `<i class="fas ${ICO[type]||ICO.info}"></i> ${msg}`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, duration);
+}
+
+// ── CONFIRM MODAL ──────────────────────────────────────────────
+function showConfirm(title, body, onConfirm, confirmLabel = 'Hapus', confirmColor = 'var(--danger)') {
+  let existing = document.getElementById('_confirmModal');
+  if (existing) existing.remove();
+  const m = document.createElement('div');
+  m.id = '_confirmModal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:8000;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px;max-width:400px;width:100%;animation:mIn .2s ease">
+      <div style="font-family:var(--fdisp);font-size:20px;font-weight:700;margin-bottom:8px">${title}</div>
+      <div style="color:var(--dim);font-size:13px;line-height:1.6;margin-bottom:20px">${body}</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="document.getElementById('_confirmModal').remove()" style="padding:9px 20px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--dim);font-size:13px;cursor:pointer">Batal</button>
+        <button id="_confirmBtn" style="padding:9px 20px;background:${confirmColor};border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">${confirmLabel}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  document.getElementById('_confirmBtn').onclick = () => { m.remove(); onConfirm(); };
+}
+
+// ── DEBOUNCE ───────────────────────────────────────────────────
+function debounce(fn, ms = 350) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────
+function startClock(elId) {
+  const tick = () => {
+    const el = document.getElementById(elId);
+    if (el) el.textContent = new Date().toLocaleString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  };
+  tick(); setInterval(tick, 60000);
+}
+
+// ── EXPORT CSV ─────────────────────────────────────────────────
+function exportCSV(headers, rows, filename) {
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+
+// ── SKELETON LOADING ────────────────────────────────────────────
+function skeletonRows(cols, count = 5) {
+  const cell = `<td><div style="height:12px;background:var(--card3);border-radius:4px;animation:pulse 1.5s ease infinite"></div></td>`;
+  return Array(count).fill(`<tr>${cell.repeat(cols)}</tr>`).join('');
+}
+
+// ── LOCAL CACHE (mirrors index.html's qs_user_cache) ─────────
+const USER_CACHE_KEY = 'qs_user_cache';
+function loadUserCache(){ try{ return JSON.parse(localStorage.getItem(USER_CACHE_KEY)||'[]'); }catch(e){ return []; } }
+function saveToCache(u){
+  // Never cache built-in users to avoid password override
+  const BUILTIN=['admin','qs','purchasing'];
+  if(BUILTIN.includes(u.username)) return;
+  const cache=loadUserCache().filter(x=>x.username!==u.username);
+  // Only store if password was explicitly set (non-empty)
+  if(u._newPassword) cache.push({username:u.username,password:u._newPassword,role:u.role||'qs',fullName:u.fullName||'',status:u.status||'aktif'});
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(cache));
+}
+function removeFromCache(username){
+  const cache=loadUserCache().filter(x=>x.username!==username);
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(cache));
+}
+let users=[], usersFiltered=[];
+const isDemo=()=>API_URL==='YOUR_GAS_WEBAPP_URL';
+  {id:'USR-0001',username:'admin',fullName:'Administrator',role:'admin',status:'aktif',created:'01/01/2025'},
+  {id:'USR-0002',username:'qs',fullName:'Quantity Surveyor',role:'qs',status:'aktif',created:'01/01/2025'},
+  {id:'USR-0003',username:'purchasing',fullName:'Purchasing Manager',role:'purchasing',status:'aktif',created:'01/01/2025'},
+];
+
+async function loadUsers(){
+  if(isDemo()){users=[...DEMO_USERS];}
+  else{try{const r=await QSApi.get('getUsers');if(r.success)users=r.data||[];}catch(e){users=[...DEMO_USERS];}}
+  filterUsers();
+}
+
+const debouncedFilter=debounce(filterUsers);
+function filterUsers(){
+  const q=(document.getElementById('userSearch').value||'').toLowerCase();
+  const role=document.getElementById('userRoleFilter').value;
+  usersFiltered=users.filter(u=>(!q||[u.username,u.fullName,u.id].join('|').toLowerCase().includes(q))&&(!role||u.role===role));
+  document.getElementById('userCount').textContent=usersFiltered.length+' user';
+  renderUsers();
+}
+
+const ROLE_BADGE_MAP={admin:'badge-red',qs:'badge-cyan',purchasing:'badge-purple'};
+function renderUsers(){
+  const me=QSAuth.getUser()?.username;
+  document.getElementById('userBody').innerHTML=!usersFiltered.length
+    ?`<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users-slash"></i><p>Tidak ada pengguna</p></div></td></tr>`
+    :usersFiltered.map(u=>`<tr>
+      <td class="mono">${u.id}</td>
+      <td class="fw-bold" style="color:var(--text)">${u.username}${u.username===me?` <span class="badge badge-yellow" style="font-size:8px">ANDA</span>`:''}</td>
+      <td class="text-dim">${u.fullName||'—'}</td>
+      <td><span class="badge ${ROLE_BADGE_MAP[u.role]||'badge-gray'}">${u.role?.toUpperCase()}</span></td>
+      <td><span class="badge ${u.status==='aktif'?'badge-green':'badge-gray'}">${u.status}</span></td>
+      <td class="mono text-muted" style="font-size:10px">${u.created||'—'}</td>
+      <td><div class="act-btns">
+        <button class="act-btn act-edit" onclick="editUser('${u.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+        ${u.username!==me?`<button class="act-btn act-del" onclick="deleteUser('${u.id}','${u.username}')" title="Hapus"><i class="fas fa-trash"></i></button>`:'<button class="act-btn" style="opacity:.2;cursor:not-allowed" disabled title="Tidak bisa hapus akun sendiri"><i class="fas fa-lock"></i></button>'}
+      </div></td>
+    </tr>`).join('');
+}
+
+async function saveUser(){
+  const id=document.getElementById('userEditId').value;
+  const username=document.getElementById('uUsername').value.trim();
+  const fullName=document.getElementById('uFullName').value.trim();
+  const password=document.getElementById('uPassword').value; // may be empty for updates
+  const role=document.getElementById('uRole').value;
+  const status=document.getElementById('uStatus').value;
+
+  if(!username){toast('Username wajib diisi!','error');return;}
+  if(!id&&!password){toast('Password wajib diisi untuk user baru!','error');return;}
+
+  const data={id,username,fullName,password,role,status};
+
+  // ── Write to localStorage cache so login works immediately ──
+  const cacheEntry={username,role,fullName,status,_newPassword:password||null};
+
+  if(isDemo()){
+    if(id){
+      const i=users.findIndex(u=>u.id===id);
+      if(i!==-1) users[i]={...users[i],username,fullName,role,status};
+    } else {
+      const newId='USR-'+String(users.length+1).padStart(4,'0');
+      users.push({id:newId,username,fullName,role,status,created:new Date().toLocaleDateString('id-ID')});
+    }
+    if(password) saveToCache(cacheEntry);
+    cancelEditUser();filterUsers();
+    toast(id?'User diperbarui! Login dengan password baru sudah aktif.':'User ditambahkan! User dapat login sekarang.');
+    return;
+  }
+
+  const btn=document.getElementById('userSaveBtn');btn.disabled=true;
+  try{
+    const r=await QSApi.post({action:id?'updateUser':'addUser',data});
+    if(r.success){
+      if(password) saveToCache(cacheEntry); // cache password for immediate login
+      toast(r.message+' — Login sudah aktif.');
+      cancelEditUser();
+      await loadUsers();
+    } else toast(r.message,'error');
+  }catch(e){toast('Koneksi error!','error');}
+  btn.disabled=false;
+}
+
+function editUser(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('userEditId').value=u.id;
+  document.getElementById('uUsername').value=u.username;
+  document.getElementById('uFullName').value=u.fullName||'';
+  document.getElementById('uPassword').value='';
+  document.getElementById('uRole').value=u.role||'qs';
+  document.getElementById('uStatus').value=u.status||'aktif';
+  document.getElementById('userFormTitle').textContent='Edit User';
+  document.getElementById('userSaveLbl').textContent='UPDATE USER';
+  document.getElementById('passHint').style.display='inline';
+  document.getElementById('userCancelBtn').style.display='block';
+  document.getElementById('userFormCard').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelEditUser(){
+  ['userEditId','uUsername','uFullName','uPassword'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('uRole').value='qs';document.getElementById('uStatus').value='aktif';
+  document.getElementById('userFormTitle').textContent='Tambah User';
+  document.getElementById('userSaveLbl').textContent='SIMPAN USER';
+  document.getElementById('userCancelBtn').style.display='none';
+}
+
+function deleteUser(id,username){
+  showConfirm('Hapus User',`Hapus user "${username}"? Mereka tidak dapat login lagi.`,async()=>{
+    removeFromCache(username); // remove from local login cache immediately
+    if(isDemo()){users=users.filter(u=>u.id!==id);filterUsers();toast('User dihapus','info');return;}
+    try{const r=await QSApi.post({action:'deleteUser',id});if(r.success){toast(r.message);await loadUsers();}else toast(r.message,'error');}
+    catch(e){toast('Error','error');}
+  });
+}
+
+function toggleUPass(){const p=document.getElementById('uPassword'),i=document.getElementById('uEye');p.type=p.type==='password'?'text':'password';i.className=p.type==='password'?'fas fa-eye':'fas fa-eye-slash';}
+
+const _user=QSAuth.requirePerm('users');
+if(_user){initSidebar('users');loadUsers();}
+</script>
+</body>
+</html>
